@@ -54,10 +54,6 @@ cdk deploy -c table-name=YOUR_TABLE_NAME -c table-streams-arn=arn:aws:dynamodb:u
 cdk destroy -c table-name=YOUR_TABLE_NAME -c table-streams-arn=arn:aws:dynamodb:us-east-1:111122223333:table/YOUR_TABLE_NAME/stream/2024-01-17T15:02:41.471
 ```
 
-## Detailed Architecture
-
-![Architecture](./documentation/architecture-diagram.png "Architecture")
-
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
