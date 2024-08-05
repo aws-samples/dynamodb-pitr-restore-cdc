@@ -1,0 +1,83 @@
+{
+  "Comment": "State machine to monitor restore lifecycle of a dynamoDB table",
+  "StartAt": "Start restore",
+  "States": {
+    "Start restore": {
+      "Comment": "start workflow",
+      "Type": "Pass",
+      "Next": "Wait X Seconds"
+    },
+    "Wait X Seconds": {
+      "Type": "Wait",
+      "Next": "Poll Restore table status",
+      "Seconds": 30
+    },
+    "Poll Restore table status": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "{checkddbstatuslambdaarn}:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Is restore Complete?"
+    },
+    "Is restore Complete?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.status",
+          "StringEquals": "FAILED",
+          "Next": "restore Failed"
+        },
+        {
+          "Variable": "$.status",
+          "StringEquals": "SUCCEEDED",
+          "Next": "Hook Lambda into SQS and Backfill"
+        }
+      ],
+      "Default": "Wait X Seconds"
+    },
+    "Hook Lambda into SQS and Backfill": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "{initiatelambdabackfillarn}:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "restore Failed": {
+      "Comment": "Placeholder for a state which handles the failure.",
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}
