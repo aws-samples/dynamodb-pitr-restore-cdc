@@ -6,7 +6,7 @@ In this repository you will find the precedure to implement Point In Time Restor
 
 1. The “source table” will serve Live traffic
 2. You, as a System Administrator, decide it is time to restore the table to a certain point.
-3. Amazon DynamoDB Streams captures all CRUD operations, enabling Change Data Capture (CDC) functionality. DynamoDB Streams will trigger an AWS Lambda function “CDC Subscriber” to send the events to an Amazon SQS queue.
+3. Amazon DynamoDB Streams captures all CRUD operations, enabling Change Data Capture (CDC) functionality. DynamoDB Streams will trigger an AWS Lambda function “CDC Subscriber” to send the events to an Amazon SQS FIFO queue.
 4. The SQS queue will hold events until the new DynamoDB “restored table” is ready.
 5. The action `RestoreTableToPointInTime` triggers an event through a configured Amazon EventBridge rule.
 6. EventBridge will start an AWS Step Functions workflow to monitor the restoration and status of the table once the event is detected. Once this occurs, the workflow will activate an AWS Lambda function, enabling the Lambda trigger between SQS and the CDC subscriber Lambda function.
