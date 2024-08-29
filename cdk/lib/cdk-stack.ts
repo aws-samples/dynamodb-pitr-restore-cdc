@@ -39,13 +39,16 @@ export class PITRDynamoDBNoDowntimeStack extends cdk.Stack {
 
     const sourceTableStreamsParam =
       this.node.tryGetContext("table-streams-arn");
+
     const bufferQueue = new sqs.Queue(
       this,
-      "cdc-buffer-queue-" + sourceTableParam,
+      "cdc-buffer-queue-" + sourceTableParam + ".fifo",
       {
+        fifo: true,
+        contentBasedDeduplication: true,
         encryption: sqs.QueueEncryption.KMS_MANAGED,
         enforceSSL: true,
-        queueName: "buffer-cdc-dynamodb-iac-" + sourceTableParam,
+        queueName: "buffer-cdc-dynamodb-iac-" + sourceTableParam + ".fifo",
         deadLetterQueue: {
           maxReceiveCount: 5, // Number of times a message can be received before being moved to the DLQ
           queue: new sqs.Queue(
